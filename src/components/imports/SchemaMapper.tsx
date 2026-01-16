@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowRight, Wand2 } from "lucide-react";
 
 const TARGET_COLUMNS = [
@@ -49,6 +49,8 @@ interface SchemaMapperProps {
 
 export function SchemaMapper({ sourceColumns, onMappingChange }: SchemaMapperProps) {
   const [mapping, setMapping] = useState<Record<string, string | null>>({});
+  const onMappingChangeRef = useRef(onMappingChange);
+  onMappingChangeRef.current = onMappingChange;
 
   // Auto-map on initial load
   useEffect(() => {
@@ -85,8 +87,8 @@ export function SchemaMapper({ sourceColumns, onMappingChange }: SchemaMapperPro
         targetColumn: target!,
       }));
     
-    onMappingChange(mappings);
-  }, [mapping, onMappingChange]);
+    onMappingChangeRef.current(mappings);
+  }, [mapping]);
 
   const handleMappingChange = (sourceCol: string, targetCol: string | null) => {
     setMapping(prev => ({
