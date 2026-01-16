@@ -20,38 +20,33 @@ interface CompanyForResearch {
 
 /**
  * Get prompts from database
+ * Prompts are stored exclusively in the database - no code fallbacks
  */
 async function getResearchPrompts(): Promise<{ address: string; description: string }> {
   const supabase = await createClient();
   
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('prompts')
     .select('step, template')
     .in('step', ['research_address', 'research_description'])
     .eq('is_active', true);
   
-  const addressPrompt = data?.find(p => p.step === 'research_address')?.template || getDefaultAddressPrompt();
-  const descriptionPrompt = data?.find(p => p.step === 'research_description')?.template || getDefaultDescriptionPrompt();
+  if (error) {
+    throw new Error(`Failed to fetch research prompts: ${error.message}`);
+  }
+  
+  const addressPrompt = data?.find(p => p.step === 'research_address')?.template;
+  const descriptionPrompt = data?.find(p => p.step === 'research_description')?.template;
+  
+  if (!addressPrompt) {
+    throw new Error('No active research_address prompt found in database. Please add one via /pipeline/prompts');
+  }
+  
+  if (!descriptionPrompt) {
+    throw new Error('No active research_description prompt found in database. Please add one via /pipeline/prompts');
+  }
   
   return { address: addressPrompt, description: descriptionPrompt };
-}
-
-function getDefaultAddressPrompt(): string {
-  return `Extract only the official, complete address of the company '{company_name}' from the company's website, checking sections like 'Contact Us', 'About Us', or 'Legal Notice'. The address should be formatted for use in Google Maps (e.g., "House Number, Street, City, State, Zip, Country").
-
-If no suitable address is found, leave the output completely blank.
-
-Constrain the search to exclusively the following domain: '{domain}'.
-
-If multiple addresses are listed (e.g., various branches), return only the one located in the company's country of origin: {country}.`;
-}
-
-function getDefaultDescriptionPrompt(): string {
-  return `Write a unique, friendly, and engaging company description in 150 words or fewer for the company '{company_name}'. Describe what the company offers, its strengths, and what makes it valuable or unique. Avoid generic phrases; focus on specific offerings, products, or services. Use a professional but approachable tone.
-
-Constrain the search to exclusively the following domain: {domain}
-
-Return only the description text, nothing else. If you cannot find enough information, return an empty response.`;
 }
 
 /**

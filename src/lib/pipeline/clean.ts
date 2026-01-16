@@ -21,44 +21,23 @@ interface CompanyForCleaning {
 
 /**
  * Get the CLEAN prompt from database
+ * Prompts are stored exclusively in the database - no code fallbacks
  */
 async function getCleanPrompt(): Promise<string> {
   const supabase = await createClient();
   
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('prompts')
     .select('template')
     .eq('step', 'clean')
     .eq('is_active', true)
     .single();
   
-  return data?.template || getDefaultCleanPrompt();
-}
-
-function getDefaultCleanPrompt(): string {
-  return `Your task is to process and enhance company information. You will receive an input that looks like this:
-
-[
-  {{
-    "company_hash": "hash123",
-    "name": "FROZEN POWER GMBH",
-    "address": "Lungo Adige 12, 39100 Bolzano, Italy",
-    "description": "...",
-    "company_type": null
-  }}
-]
-
-Return the output in the specified structure and follow these instructions for each key's value:
-
-formatted_name: Reformat 'name' into proper capitalization and formatting, using title case, and adjusting abbreviations and punctuation to resemble natural company name formatting. For example, 'FROZEN POWER GMBH' should be 'Frozen Power GmbH,' and 'POMUNI FROZEN NV' should be 'Pomuni Frozen N.V.'
-
-formatted_address: Clean 'address' to this format exactly: "House Number, Street, City/Town, State, Zip, Country" with proper capitalization. If parts are missing, omit them but keep the order.
-
-company_type: Determine if the company is a 'seller' (manufacturer, producer, supplier) or 'buyer' (retailer, brand, distributor looking for suppliers) based on the description. Return 'seller' or 'buyer'. If unclear, return null.
-
-enriched_description: Make the description friendly, engaging, and professional. Maximum 150 words. Focus on what the company offers and their value proposition. If the original description is empty or too short, return null.
-
-Return a JSON array with the same number of items as input.`;
+  if (error || !data?.template) {
+    throw new Error('No active CLEAN prompt found in database. Please add one via /pipeline/prompts');
+  }
+  
+  return data.template;
 }
 
 /**
