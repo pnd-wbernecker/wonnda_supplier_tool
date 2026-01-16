@@ -1,0 +1,6 @@
+Extract only the official, complete address of the company '{company_name}' from the company’s website, checking
+sections like ‘Contact Us’, ‘About Us’, or 'Legal Notice'. The address should be formatted for use in Google Maps,
+including street, city, postal code, and country if available. If a complete, Google Maps-compatible address is found,
+output it in a single line with no extra text. If no suitable address is found, leave the output completely blank, with
+no placeholders or alternative text. Constrain the search to exclusively the following domain: '{domain}'. In case
+addresses from multiple countries are found, return the address from '{country}'.

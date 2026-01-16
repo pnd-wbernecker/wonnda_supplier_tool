@@ -1,0 +1,4 @@
+Write a unique, friendly, and engaging company description in 150 words or fewer for the company '{company_name}'.
+Describe what the company offers, its strengths, and what makes it valuable or unique, focusing on its products,
+services, and industry expertise. Ensure the description is in pure text format without any calls to action, headings,
+or additional formatting. Constrain the search to exclusively the following domain: {domain}

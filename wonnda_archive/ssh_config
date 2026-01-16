@@ -1,0 +1,19 @@
+Host pnd_utils
+  HostName github.com
+  IdentityFile ~/.ssh/pnd_cb_utils
+  IdentitiesOnly yes
+
+Host pnd_database_connector
+  HostName github.com
+  IdentityFile ~/.ssh/pnd_cb_database_connector
+  IdentitiesOnly yes
+
+Host pnd_gsheets_connector
+  HostName github.com
+  IdentityFile ~/.ssh/pnd_cb_gsheets_connector
+  IdentitiesOnly yes
+
+Host pnd_gcs
+  HostName github.com
+  IdentityFile ~/.ssh/pnd_cb_gcs
+  IdentitiesOnly yes

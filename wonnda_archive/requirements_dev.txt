@@ -1,0 +1,9 @@
+mypy
+flake8
+flake8-bugbear
+flake8-bandit
+black
+pre-commit
+pytest
+pytest-cov
+isort[requirements_deprecated_finder]

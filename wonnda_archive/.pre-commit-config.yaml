@@ -1,0 +1,55 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.2.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: mixed-line-ending
+      - id: check-xml
+      - id: pretty-format-json
+        args: [ --autofix ]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pycqa/flake8
+    rev: '4.0.1'  # pick a git hash / tag to point to
+    hooks:
+      - id: flake8
+        additional_dependencies: [
+
+          flake8-bugbear,
+          flake8-bandit
+        ]
+        args:
+          - --ignore
+          - W605, S101, E203, W503
+          - "--max-line-length=88"
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v0.982'
+    hooks:
+      - id: mypy
+        exclude: '^tests/'
+        language_version: '3.10'
+        args:
+          - --ignore-missing-imports
+          - --namespace-packages
+          - --explicit-package-bases
+          - --config-file
+          - mypy_pre_commit.ini
+        additional_dependencies: ['types-requests','types-retry']

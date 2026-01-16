@@ -1,0 +1,75 @@
+Your task is to process and enhance company information. You will receive an input that looks like this:
+
+[
+  {{
+    "company_id": 123,
+    "company_name": "FROZEN POWER GMBH",
+    "address": "Lungo Adige 12, 39100 Bolzano, Italy",
+    "description": "Welcome to PANKO, your trusted partner in pest control Since 1993, we've been dedicated to creating
+    innovative, effective, and eco-friendly insect monitoring traps. Our mission is to optimize the pest monitoring
+    process by designing traps that not only capture pests but also provide valuable insights into their behavior. We
+    specialize in traps for various insect species, including silverfish and cockroaches, using high-quality raw
+    materials and proprietary formulas for our attractants and adhesives. Our products are tailored to meet the
+    specific needs of libraries, archives, private homes, and agricultural settings. With advanced insect recognition
+    technology and years of collaboration with academic institutions, we ensure precision and reliability in our
+    solutions. At PANKO, we pride ourselves on our commitment to quality, innovation, and customer satisfaction, making
+    us one of the leading manufacturers of monitoring traps in Europe."
+  }},
+  {{
+    "company_id": 1234,
+    "company_name": "GREEN VALLEY FOODS INC.",
+    "address": "742 Evergreen Terrace, Springfield, USA",
+    "description": "Green Valley Foods is a leading supplier of organic and sustainable food products, committed to
+    supporting farmers and promoting healthy living. With a diverse product range including grains, fruits, vegetables,
+    and dairy, the company has built strong relationships with local producers and customers worldwide. Their mission
+    is to offer fresh, high-quality food while minimizing environmental impact through sustainable practices and
+    eco-friendly packaging."
+  }}
+]
+
+Return the output in the specified structure and follow these instructions for each key’s value:
+
+formatted_company_name: Reformat 'company_name' into proper capitalization and formatting, using title case, and
+adjusting abbreviations and punctuation to resemble natural company name formatting. For example, ‘FROZEN POWER GMBH’
+should be ‘Frozen Power GmbH,’ and ‘POMUNI FROZEN NV’ should be ‘Pomuni Frozen N.V.’ Follow similar styling conventions.
+
+formatted_address: clean 'address' to this format “House Number, Street Name, City, State, Zip, Country”. If any of
+the values is missing leave it empty but keep the comma.
+
+determined_company_type1: Based on the provided description for the company set this value to either “seller” or “buyer”.
+
+enriched_description: Make the existing description sound friendly and engaging in 150 words or fewer. Describe what
+the company offers, its strengths, and what makes it valuable or unique, focusing on its products, services, and
+industry expertise. Ensure the description is in pure text format without any calls to action, headings, or additional
+formatting.
+
+I expect an output that looks like this:
+
+[
+  {{
+    "company_id": 123,
+    "formatted_company_name": "Frozen Power GmbH",
+    "formatted_address": "12, Lungo Adige, Bolzano,, 39100, Italy",
+    "determined_company_type1": "seller",
+    "enriched_description": "PANKO has been a reliable partner in pest control since 1993, offering innovative and
+    eco-friendly insect monitoring traps. These traps capture pests while providing insights into their behavior.
+    Specializing in traps for silverfish and cockroaches, PANKO uses premium materials and proprietary formulas for
+    attractants and adhesives. Their solutions cater to libraries, archives, homes, and agricultural settings, backed
+    by cutting-edge insect recognition technology and academic collaboration. PANKO is recognized for quality,
+    innovation, and customer-focused solutions, making it a leader in European pest monitoring."
+  }},
+  {{
+    "company_id": 1234,
+    "formatted_company_name": "Green Valley Foods Inc.",
+    "formatted_address": "742, Evergreen Terrace, Springfield,,, USA",
+    "determined_company_type1": "buyer",
+    "enriched_description": "Green Valley Foods excels in delivering organic and sustainable food products, fostering
+    strong relationships with farmers and promoting healthy lifestyles. Their diverse offerings include grains, fruits,
+    vegetables, and dairy, all sourced with an emphasis on freshness and quality. By employing sustainable practices
+    and eco-friendly packaging, they contribute to reducing environmental impact while meeting the needs of
+    health-conscious consumers. Green Valley Foods is a trusted name in organic food distribution."
+  }}
+]
+
+Please process these companies and return them in the required format, ensuring all changes are applied.
+Companies: {companies}

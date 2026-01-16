@@ -1,0 +1,8 @@
+langchain-core~=0.3.24
+langchain-openai~=0.2.12
+pnd_database@git+ssh://git@pnd_database_connector/pandata-gmbh/cb_database_connector.git@v1.3.18
+pnd_gsheets@git+ssh://git@pnd_gsheets_connector/pandata-gmbh/cb_gsheets_connector.git@v1.1.2
+pnd_utils@git+ssh://git@pnd_utils/pandata-gmbh/cb_utils.git@v1.0.8
+pydantic~=2.10.4
+requests~=2.32.3
+retry~=0.9.2
