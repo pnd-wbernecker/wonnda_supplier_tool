@@ -14,7 +14,13 @@ export async function POST(request: NextRequest) {
     
     const result = await runValidateStep(importId);
     
-    return NextResponse.json(result);
+    // Return in format expected by frontend
+    return NextResponse.json({
+      processed: result.processed,
+      valid: result.valid,
+      invalid: result.invalid,
+      errors: result.errors,
+    });
   } catch (error) {
     console.error('Validate step error:', error);
     return NextResponse.json(

@@ -69,7 +69,7 @@ export async function cleanCompanyBatch(
 ): Promise<CleanedCompany[]> {
   const prompt = await getCleanPrompt();
   
-  const userMessage = JSON.stringify(companies, null, 2);
+  const userMessage = `Process these companies and return as JSON:\n\n${JSON.stringify(companies, null, 2)}`;
   
   try {
     const response = await openai.chat.completions.create({

@@ -12,7 +12,8 @@ import type {
   ColumnMapping, 
   MappedCompany, 
   ProcessedCompany,
-  ImportResult 
+  ImportResult,
+  SkippedCompany
 } from './types';
 
 /**
@@ -21,9 +22,11 @@ import type {
 export function applyMapping(
   rawData: RawCompanyData[],
   mappings: ColumnMapping[]
-): MappedCompany[] {
-  return rawData.map(row => {
-    const mapped: Record<string, unknown> = {};
+): { mapped: MappedCompany[]; skippedNoName: number } {
+  let skippedNoName = 0;
+  
+  const mapped = rawData.map(row => {
+    const result: Record<string, unknown> = {};
     
     for (const { sourceColumn, targetColumn } of mappings) {
       const value = row[sourceColumn];
@@ -31,24 +34,31 @@ export function applyMapping(
       if (value !== null && value !== undefined && value !== '') {
         // Handle array fields
         if (['categories', 'tags', 'certifications', 'production_types'].includes(targetColumn)) {
-          // Split by comma if string, or use as-is if already array
-          mapped[targetColumn] = typeof value === 'string' 
+          result[targetColumn] = typeof value === 'string' 
             ? value.split(',').map(v => v.trim()).filter(Boolean)
             : value;
         }
         // Handle boolean
         else if (targetColumn === 'accepts_startups') {
-          mapped[targetColumn] = value.toLowerCase() === 'true' || value === '1' || value.toLowerCase() === 'yes';
+          result[targetColumn] = value.toLowerCase() === 'true' || value === '1' || value.toLowerCase() === 'yes';
         }
         // String fields
         else {
-          mapped[targetColumn] = value;
+          result[targetColumn] = value;
         }
       }
     }
     
-    return mapped as MappedCompany;
-  }).filter(row => row.name); // Must have name
+    return result as MappedCompany;
+  }).filter(row => {
+    if (!row.name) {
+      skippedNoName++;
+      return false;
+    }
+    return true;
+  });
+  
+  return { mapped, skippedNoName };
 }
 
 /**
@@ -80,17 +90,20 @@ export async function processCompanies(
 
 /**
  * Deduplicate against existing companies in Supabase
- * Returns only new companies (not already in DB)
+ * Returns only new companies (not already in DB) + skipped with reasons
  */
 export async function deduplicateCompanies(
   companies: ProcessedCompany[]
-): Promise<{ new: ProcessedCompany[]; duplicates: ProcessedCompany[] }> {
+): Promise<{ 
+  new: ProcessedCompany[]; 
+  skipped: SkippedCompany[];
+}> {
   const supabase = await createClient();
   
   // Get all hashes
   const hashes = companies.map(c => c.company_hash);
   
-  // Check which already exist
+  // Check which already exist in DB
   const { data: existing } = await supabase
     .from('companies')
     .select('company_hash')
@@ -101,18 +114,30 @@ export async function deduplicateCompanies(
   // Also dedupe within the import (keep first occurrence)
   const seenHashes = new Set<string>();
   const newCompanies: ProcessedCompany[] = [];
-  const duplicates: ProcessedCompany[] = [];
+  const skipped: SkippedCompany[] = [];
   
   for (const company of companies) {
-    if (existingHashes.has(company.company_hash) || seenHashes.has(company.company_hash)) {
-      duplicates.push(company);
+    if (existingHashes.has(company.company_hash)) {
+      skipped.push({
+        name: company.name,
+        domain: company.domain,
+        company_hash: company.company_hash,
+        reason: 'duplicate_in_db',
+      });
+    } else if (seenHashes.has(company.company_hash)) {
+      skipped.push({
+        name: company.name,
+        domain: company.domain,
+        company_hash: company.company_hash,
+        reason: 'duplicate_in_csv',
+      });
     } else {
       seenHashes.add(company.company_hash);
       newCompanies.push(company);
     }
   }
   
-  return { new: newCompanies, duplicates };
+  return { new: newCompanies, skipped };
 }
 
 /**
@@ -249,20 +274,36 @@ export async function updateImportStats(
 export async function runImport(
   rawData: RawCompanyData[],
   mappings: ColumnMapping[],
-  filename: string
+  filename: string,
+  rowLimit?: number
 ): Promise<ImportResult> {
+  // Apply row limit if specified
+  const dataToProcess = rowLimit ? rawData.slice(0, rowLimit) : rawData;
+  
   // 1. Create import record
-  const importId = await createImport(filename, rawData.length, mappings);
+  const importId = await createImport(filename, dataToProcess.length, mappings);
   
   try {
     // 2. Apply mapping
-    const mapped = applyMapping(rawData, mappings);
+    const { mapped, skippedNoName } = applyMapping(dataToProcess, mappings);
+    
+    // Track skipped for missing name
+    const skippedCompanies: SkippedCompany[] = [];
+    for (let i = 0; i < skippedNoName; i++) {
+      skippedCompanies.push({
+        name: '(no name)',
+        domain: null,
+        company_hash: '',
+        reason: 'missing_name',
+      });
+    }
     
     // 3. Process (domain, hash, email validation)
     const processed = await processCompanies(mapped, importId);
     
     // 4. Deduplicate
-    const { new: newCompanies, duplicates } = await deduplicateCompanies(processed);
+    const { new: newCompanies, skipped } = await deduplicateCompanies(processed);
+    skippedCompanies.push(...skipped);
     
     // 5. Insert new companies
     const { success, errors } = await insertCompanies(newCompanies);
@@ -270,16 +311,17 @@ export async function runImport(
     // 6. Update import stats
     await updateImportStats(importId, {
       processed_count: success,
-      skipped_count: duplicates.length,
+      skipped_count: skippedCompanies.length,
       status: errors.length > 0 ? 'completed_with_errors' : 'completed',
     });
     
     return {
       import_id: importId,
-      total_rows: rawData.length,
+      total_rows: dataToProcess.length,
       processed_count: success,
-      skipped_count: duplicates.length,
+      skipped_count: skippedCompanies.length,
       error_count: errors.length,
+      skipped_companies: skippedCompanies,
       errors: errors.map((e, i) => ({ row: i, error: e.error })),
     };
   } catch (error) {

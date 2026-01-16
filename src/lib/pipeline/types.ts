@@ -43,12 +43,20 @@ export interface ProcessedCompany extends MappedCompany {
   import_id: string;
 }
 
+export interface SkippedCompany {
+  name: string;
+  domain: string | null;
+  company_hash: string;
+  reason: 'duplicate_in_db' | 'duplicate_in_csv' | 'missing_name';
+}
+
 export interface ImportResult {
   import_id: string;
   total_rows: number;
   processed_count: number;
   skipped_count: number;
   error_count: number;
+  skipped_companies: SkippedCompany[];
   errors: Array<{ row: number; error: string }>;
 }
 
@@ -58,6 +66,15 @@ export interface PipelineStep {
   processed: number;
   total: number;
   errors: string[];
+}
+
+export interface PipelineProgress {
+  step: 'import' | 'clean' | 'research' | 'validate';
+  status: 'running' | 'completed' | 'failed';
+  current: number;
+  total: number;
+  message: string;
+  logs: string[];
 }
 
 // LLM Response types
@@ -74,4 +91,29 @@ export interface ResearchedCompany {
   formatted_address?: string | null;
   enriched_description?: string | null;
   enrichment_sources?: string[];
+}
+
+// Import Report
+export interface ImportReport {
+  import_id: string;
+  filename: string;
+  started_at: string;
+  completed_at: string;
+  duration_seconds: number;
+  
+  summary: {
+    total_rows: number;
+    imported: number;
+    skipped: number;
+    errors: number;
+  };
+  
+  pipeline: {
+    clean: { processed: number; errors: number };
+    research: { processed: number; errors: number };
+    validate: { valid: number; invalid: number };
+  };
+  
+  skipped_companies: SkippedCompany[];
+  error_details: Array<{ company: string; error: string }>;
 }

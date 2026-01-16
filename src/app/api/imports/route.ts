@@ -21,10 +21,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { data, mappings, filename } = body as {
+    const { data, mappings, filename, rowLimit } = body as {
       data: RawCompanyData[];
       mappings: ColumnMapping[];
       filename: string;
+      rowLimit?: number;
     };
     
     if (!data || !Array.isArray(data) || data.length === 0) {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const result = await runImport(data, mappings, filename || 'unnamed.csv');
+    const result = await runImport(data, mappings, filename || 'unnamed.csv', rowLimit);
     
     return NextResponse.json(result);
   } catch (error) {
