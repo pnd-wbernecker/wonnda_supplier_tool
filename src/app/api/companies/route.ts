@@ -60,7 +60,22 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const supabase = await createClient();
   const { searchParams } = new URL(request.url);
-  const ids = searchParams.get('ids')?.split(',') || [];
+  const ids = searchParams.get('ids')?.split(',').filter(Boolean) || [];
+  const deleteAll = searchParams.get('all') === 'true';
+  
+  if (deleteAll) {
+    // Delete all companies
+    const { error, count } = await supabase
+      .from('companies')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all (neq trick)
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    return NextResponse.json({ deleted: count || 'all' });
+  }
   
   if (ids.length === 0) {
     return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });

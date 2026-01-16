@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Download, Trash2, RefreshCw, Filter } from 'lucide-react';
+import { Search, Download, Trash2, RefreshCw, Filter, AlertTriangle, X } from 'lucide-react';
 
 interface Company {
   id: string;
@@ -30,6 +30,9 @@ export default function CompaniesPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const fetchCompanies = useCallback(async () => {
     setLoading(true);
@@ -105,6 +108,23 @@ export default function CompaniesPage() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (deleteConfirmText !== 'DELETE ALL') return;
+    
+    setDeleting(true);
+    try {
+      await fetch('/api/companies?all=true', { method: 'DELETE' });
+      setShowDeleteAllModal(false);
+      setDeleteConfirmText('');
+      setSelected(new Set());
+      fetchCompanies();
+    } catch (error) {
+      console.error('Delete all failed:', error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const toggleSelect = (id: string) => {
     const newSelected = new Set(selected);
     if (newSelected.has(id)) {
@@ -159,6 +179,16 @@ export default function CompaniesPage() {
             >
               <Trash2 size={18} />
               Delete ({selected.size})
+            </button>
+          )}
+
+          {pagination.total > 0 && (
+            <button
+              onClick={() => setShowDeleteAllModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-900/50 hover:bg-red-800 border border-red-700 rounded-lg transition"
+            >
+              <Trash2 size={18} />
+              Delete All
             </button>
           )}
           
@@ -328,6 +358,71 @@ export default function CompaniesPage() {
             >
               Next
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete All Confirmation Modal */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3 text-red-400">
+                <AlertTriangle size={24} />
+                <h2 className="text-xl font-bold">Delete All Companies</h2>
+              </div>
+              <button
+                onClick={() => { setShowDeleteAllModal(false); setDeleteConfirmText(''); }}
+                className="p-1 hover:bg-gray-700 rounded transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-gray-300">
+                This will permanently delete <span className="font-bold text-white">{pagination.total} companies</span> from the database. This action cannot be undone.
+              </p>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">
+                  Type <span className="font-mono bg-gray-900 px-2 py-0.5 rounded text-red-400">DELETE ALL</span> to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="DELETE ALL"
+                  className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:outline-none focus:border-red-500"
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => { setShowDeleteAllModal(false); setDeleteConfirmText(''); }}
+                  className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAll}
+                  disabled={deleteConfirmText !== 'DELETE ALL' || deleting}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={18} />
+                      Delete All
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
