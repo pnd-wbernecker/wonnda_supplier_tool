@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Upload, FileSpreadsheet, Clock, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
+import type { Import } from "@/types/database";
 
 export default async function ImportsPage() {
   const supabase = await createClient();
@@ -8,7 +9,7 @@ export default async function ImportsPage() {
   const { data: imports, error } = await supabase
     .from("imports")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false }) as { data: Import[] | null; error: { message: string } | null };
 
   return (
     <div>

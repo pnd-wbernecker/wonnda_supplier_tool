@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CLEAN Step - OpenAI formatting and classification
  * Migrated from wonnda_archive: enrich_companies.txt

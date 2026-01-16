@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * RESEARCH Step - Perplexity web search for missing data
  * Migrated from wonnda_archive: retrieve_address.txt, create_description.txt

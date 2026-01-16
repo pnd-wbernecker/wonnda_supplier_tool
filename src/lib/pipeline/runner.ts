@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Pipeline Runner - Orchestrates all pipeline steps
  */

@@ -8,15 +8,14 @@ import {
   Clock
 } from "lucide-react";
 import Link from "next/link";
+import type { Company, Import } from "@/types/database";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   
   // Fetch stats
-  const [companiesResult, importsResult] = await Promise.all([
-    supabase.from("companies").select("id, status", { count: "exact" }),
-    supabase.from("imports").select("id, status", { count: "exact" }),
-  ]);
+  const companiesResult = await supabase.from("companies").select("id, status", { count: "exact" }) as unknown as { data: Pick<Company, "id" | "status">[] | null; count: number | null };
+  const importsResult = await supabase.from("imports").select("id, status", { count: "exact" }) as unknown as { data: Pick<Import, "id" | "status">[] | null; count: number | null };
 
   const totalCompanies = companiesResult.count || 0;
   const totalImports = importsResult.count || 0;

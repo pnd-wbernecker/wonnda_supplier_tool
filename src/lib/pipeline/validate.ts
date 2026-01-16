@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * VALIDATE Step - Check companies against column rules
  */

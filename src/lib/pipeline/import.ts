@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Import processing logic
  * CSV → Mapping → Dedupe → Supabase

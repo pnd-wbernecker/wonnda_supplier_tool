@@ -38,3 +38,4 @@ build
 
 # Credentials
 creds/*
+.vercel

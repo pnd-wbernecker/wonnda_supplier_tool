@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Globe, Mail, Phone, MapPin, Building2, Tag, Shield, Clock } from "lucide-react";
 import Link from "next/link";
+import type { Company, ProcessingLog } from "@/types/database";
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -11,7 +12,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     .from("companies")
     .select("*")
     .eq("id", id)
-    .single();
+    .single() as { data: Company | null; error: unknown };
 
   if (error || !company) {
     notFound();
@@ -22,7 +23,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     .select("*")
     .eq("company_id", id)
     .order("created_at", { ascending: false })
-    .limit(10);
+    .limit(10) as { data: ProcessingLog[] | null };
 
   return (
     <div>
