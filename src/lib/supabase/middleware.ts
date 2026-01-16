@@ -1,6 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Public routes that don't require authentication
+const publicRoutes = ["/login", "/auth"];
+
+function isPublicRoute(pathname: string): boolean {
+  return publicRoutes.some((route) => pathname.startsWith(route));
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -29,24 +36,26 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired
+  // Refresh session if expired - IMPORTANT: Always use getUser() for auth verification
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users to login
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
+  const pathname = request.nextUrl.pathname;
+  
+  console.log("[AUTH]", { pathname, hasUser: !!user, error: error?.message });
+
+  // Redirect unauthenticated users to login (for protected routes)
+  if (!user && !isPublicRoute(pathname)) {
+    console.log("[AUTH] Redirecting to /login - no user");
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
   // Redirect authenticated users away from login
-  if (user && request.nextUrl.pathname.startsWith("/login")) {
+  if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
